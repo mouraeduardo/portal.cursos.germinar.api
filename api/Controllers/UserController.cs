@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Core.Models.DTOs;
 using Core.Services;
+using Core.Resources.Messages;
 namespace Application.Controllers
 {
     [ApiController]
@@ -19,11 +20,12 @@ namespace Application.Controllers
         {
             try
             {
-                bool login = _userService.Login(userLoginDTO);  //_userRepository.GetAllUsers();
+                if (!ModelState.IsValid) return BadRequest(ModelState);
 
-                if (login)
-                    return Ok("DEU BOM!");
-                else return BadRequest("Credencias invalidas!");
+                bool login = _userService.Login(userLoginDTO);
+
+                if (login) return Ok("DEU BOM!"); // Retornara o token JWT para acessar os demais endpoints
+                else return BadRequest(InfoMessages.INF001);
             }
             catch (Exception ex)
             {
@@ -31,14 +33,16 @@ namespace Application.Controllers
             }
         }
 
-        [HttpPost]
-        public IActionResult InsertUser([FromBody] UserCreateDTO userCreateDTO)
+        [HttpPost("CreateUser")]
+        public IActionResult CreateUser([FromBody] UserCreateDTO userCreateDTO)
         {
             try
             {
+                if (!ModelState.IsValid) return BadRequest(ModelState);
+
                 _userService.CreateUser(userCreateDTO);
 
-                return Ok(userCreateDTO);
+                return Ok(SuccessMessages.SUCESS002);
             }
             catch (Exception ex)
             {
