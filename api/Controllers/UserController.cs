@@ -2,6 +2,8 @@
 using Core.Models.DTOs;
 using Core.Services;
 using Core.Resources.Messages;
+using Microsoft.AspNetCore.Authorization;
+using Core.Models;
 namespace Application.Controllers
 {
     [ApiController]
@@ -22,10 +24,11 @@ namespace Application.Controllers
             {
                 if (!ModelState.IsValid) return BadRequest(ModelState);
 
-                bool login = _userService.Login(userLoginDTO);
+                string token = _userService.Login(userLoginDTO);
 
-                if (login) return Ok("DEU BOM!"); // Retornara o token JWT para acessar os demais endpoints
-                else return BadRequest(InfoMessages.INF001);
+                if (token is null) return BadRequest(InfoMessages.INF001); // Retornara o token JWT para acessar os demais endpoints
+
+                return Ok("DEU BOM! || Token: " + token);
             }
             catch (Exception ex)
             {
@@ -33,7 +36,7 @@ namespace Application.Controllers
             }
         }
 
-        [HttpPost("CreateUser")]
+        [HttpPost("CreateUser"), Authorize]
         public IActionResult CreateUser([FromBody] UserCreateDTO userCreateDTO)
         {
             try
@@ -43,6 +46,21 @@ namespace Application.Controllers
                 _userService.CreateUser(userCreateDTO);
 
                 return Ok(SuccessMessages.SUCESS002);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("GetAllUsers"), Authorize]
+        public IActionResult GetAllUsers()
+        {
+            try
+            {
+                List<User> users = _userService.GetAllUsers();
+
+                return Ok(users);
             }
             catch (Exception ex)
             {

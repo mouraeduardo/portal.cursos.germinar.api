@@ -10,14 +10,22 @@ namespace Infrastructure.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
+        private readonly IEncryptionFunctions _encryptionFunctions;
 
-        public UserService(IUserRepository userRepository)
+
+        public UserService(IUserRepository userRepository, IEncryptionFunctions encryptionFunctions)
         {
             _userRepository = userRepository;
+            _encryptionFunctions = encryptionFunctions; 
         }
+
+        public List<User> GetAllUsers()
+        {
+            return _userRepository.GetAllUsers();
+        }
+
         public bool CreateUser(UserCreateDTO userDTO)
         {
-
             User user = new User 
             { 
                 Email = userDTO.Email,
@@ -41,19 +49,19 @@ namespace Infrastructure.Services
             throw new NotImplementedException();
         }
 
-        public bool Login(UserLoginDTO userLoginDTO)
+        public string Login(UserLoginDTO userLoginDTO)
         {
             User user = _userRepository.GetByEmail(userLoginDTO.Email);
 
-            if (user == null) return false;
+            if (user == null) return null;
 
             string passwordEncrypted = EncryptionFunctions.ComputeHash(userLoginDTO.Password, user.Salt, "123", 5);
 
-            if (user.Password == passwordEncrypted)
-                return true;
+            if (user.Password != passwordEncrypted)
+                return null;
 
-            return false;
-        }
+            return _encryptionFunctions.GenerateJwtToken(user);
+        }             
 
         public bool UpdateUser(User user)
         {

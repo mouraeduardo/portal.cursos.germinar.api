@@ -1,10 +1,24 @@
-﻿using System.Security.Cryptography;
+﻿using Core.Models;
+using Microsoft.Extensions.Configuration;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Cryptography;
 using System.Text;
+using Core.Models.ConfigurationModel;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Utils
 {
-    public static class EncryptionFunctions
+    public class EncryptionFunctions : IEncryptionFunctions
     {
+        private readonly JwtSettings _jwtSettings;
+
+        public EncryptionFunctions(IOptions<JwtSettings> jwtSettings)
+        {
+            _jwtSettings = jwtSettings.Value;
+        }
+
         public static string ComputeHash(string password, string salt, string pepper, int iteration)
         {
             if (iteration <= 0) return password;
@@ -25,6 +39,29 @@ namespace Infrastructure.Utils
             rng.GetBytes(byteSalt);
             var salt = Convert.ToBase64String(byteSalt);
             return salt;
+        }
+
+        public string GenerateJwtToken(User user) 
+        {
+            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes. Role, user.Role.ToString())
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: _jwtSettings.Issuer,
+                audience: _jwtSettings.Audience,
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationInMinutes),
+                signingCredentials: credentials
+            );
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            return tokenHandler.WriteToken(token);
         }
     }
 }
