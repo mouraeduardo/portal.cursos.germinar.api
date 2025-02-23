@@ -1,15 +1,13 @@
 ﻿using Core.Models;
 using Core.Models.DTOs;
 
+namespace Core.Services;
 
-namespace Core.Services
+public interface IUserService
 {
-    public interface IUserService
-    {
-        public string Login(UserLoginDTO user);
-        public List<User> GetAllUsers();
-        public bool CreateUser(UserCreateDTO user);
-        public bool UpdateUser(User user);
-        public bool DeleteUser(User user);
-    }
+    public List<User> GetAllUsers();
+    //public User GetByEmail(string email);
+    public bool CreateUser(UserCreateDTO user);
+    public string Login(UserLoginDTO userLoginDTO);
+    public bool UpdateUser(User user);
 }

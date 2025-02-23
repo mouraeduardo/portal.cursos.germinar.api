@@ -51,17 +51,25 @@ namespace Infrastructure.Services
 
         public string Login(UserLoginDTO userLoginDTO)
         {
-            User user = _userRepository.GetByEmail(userLoginDTO.Email);
+            try
+            {
+                User user = _userRepository.GetByEmail(userLoginDTO.Email);
 
-            if (user == null) return null;
+                if (user == null) 
+                    return null;
 
-            string passwordEncrypted = EncryptionFunctions.ComputeHash(userLoginDTO.Password, user.Salt, "123", 5);
+                string passwordEncrypted = EncryptionFunctions.ComputeHash(userLoginDTO.Password, user.Salt, "123", 5);
 
-            if (user.Password != passwordEncrypted)
-                return null;
+                if (user.Password != passwordEncrypted)
+                    return null;
 
-            return _encryptionFunctions.GenerateJwtToken(user);
-        }             
+                return _encryptionFunctions.GenerateJwtToken(user);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
 
         public bool UpdateUser(User user)
         {
