@@ -1,22 +1,32 @@
-﻿using Core.Models.DTOs;
+﻿using Core.Models;
+using Core.Models.DTOs;
+using Core.Repositories;
 using Core.Services;
+using Infrastructure.Percistence.Repositories;
 
 namespace Infrastructure.Services
 {
     public class CourseService : ICourseService
     {
-        private readonly ICourseService _courseService;
+        private readonly ICourseRepository _courseRepository;
 
-        public CourseService(ICourseService courseService)
+        public CourseService(ICourseRepository courseRepository)
         {
-            _courseService = courseService; 
+            _courseRepository = courseRepository; 
         }
 
-        public void Create(CategoryCreateDTO categoryCreateDTO)
+        public void Create(CourseCreateDTO courseCreateDTO)
         {
             try
             {
-                _courseService.Create(categoryCreateDTO);
+                Course course = new Course() 
+                { 
+                    Name = courseCreateDTO.Name,
+                    Description = courseCreateDTO.Description,
+                    
+                };
+
+                _courseRepository.Insert(course);
             }
             catch (Exception)
             {
@@ -28,7 +38,7 @@ namespace Infrastructure.Services
         {
             try
             {
-                _courseService.Delete(id);
+                //_courseRepository.Update();
             }
             catch (Exception)
             {
@@ -37,11 +47,18 @@ namespace Infrastructure.Services
             }
         }
 
-        public void Update(CategoryCreateDTO categoryCreateDTO, int id)
+        public void Update(CourseCreateDTO courseCreateDTO, int id)
         {
             try
             {
-                _courseService.Update(categoryCreateDTO, id);
+                Course course = _courseRepository.GetById(id);
+
+                course.Name = courseCreateDTO.Name;
+                course.Description = courseCreateDTO.Description;
+                course.Difficulty = courseCreateDTO.Difficulty;
+                course.UpdateDate = DateTime.UtcNow;
+
+                _courseRepository.Update(course);
             }
             catch (Exception)
             {
